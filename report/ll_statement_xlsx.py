@@ -39,6 +39,16 @@ class LLStatementXslx(models.AbstractModel):
                     "width": 20,
                 },
             ]
+        # Add Init. Bal. column when grouped_by is 'none'
+        if report.grouped_by == 'none':
+            res += [
+                {
+                    "header": _("Init. Bal."),
+                    "field": "partner_init_bal",
+                    "type": "amount",
+                    "width": 14,
+                },
+            ]
         res += [
             {
                 "header": _("Debit"),

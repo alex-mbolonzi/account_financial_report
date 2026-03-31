@@ -226,6 +226,59 @@ class LLStatementReport(models.AbstractModel):
                 data[acc_id][grouped_by] = True
         return data
 
+    def _get_partner_initial_balances(
+        self, account_ids, company_id, date_from, foreign_currency, only_posted_moves
+    ):
+        """Get initial balances per partner for receivable/payable accounts."""
+        # Get receivable/payable accounts
+        acc_prt_accounts = self.env["account.account"].search(
+            [
+                ("company_ids", "in", [company_id]),
+                ("account_type", "in", ["asset_receivable", "liability_payable"]),
+            ]
+        )
+        if account_ids:
+            acc_prt_accounts = acc_prt_accounts.filtered(lambda a: a.id in account_ids)
+
+        if not acc_prt_accounts:
+            return {}
+
+        base_domain = [
+            ("company_id", "=", company_id),
+            ("account_id", "in", acc_prt_accounts.ids),
+            ("date", "<", date_from),
+        ]
+        if only_posted_moves:
+            base_domain += [("move_id.state", "=", "posted")]
+        else:
+            base_domain += [("move_id.state", "in", ["posted", "draft"])]
+
+        partner_initials = self.env["account.move.line"].read_group(
+            domain=base_domain,
+            fields=[
+                "account_id",
+                "partner_id",
+                "debit",
+                "credit",
+                "balance",
+                "amount_currency:sum",
+            ],
+            groupby=["account_id", "partner_id"],
+            lazy=False,
+        )
+        result = {}
+        for item in partner_initials:
+            acc_id = item["account_id"][0]
+            prt_id = item["partner_id"][0] if item["partner_id"] else 0
+            key = (acc_id, prt_id)
+            result[key] = {
+                "debit": item["debit"],
+                "credit": item["credit"],
+                "balance": item["balance"],
+                "bal_curr": item["amount_currency"] if foreign_currency else 0.0,
+            }
+        return result
+
     def _prepare_gen_ld_data_group_taxes(self, data, domain, grouped_by):
         gl_initial_acc_prt = self.env["account.move.line"].read_group(
             domain=domain,
@@ -834,6 +887,24 @@ class LLStatementReport(models.AbstractModel):
                         account[grouped_by] = False
                         del account["list_grouped"]
         ll_statement = sorted(ll_statement, key=lambda k: k["code"])
+        
+        # Get partner initial balances for receivable accounts when grouped by "none"
+        partner_initial_balances = {}
+        if grouped_by == "none":
+            partner_initial_balances = self._get_partner_initial_balances(
+                account_ids, company_id, date_from, foreign_currency, only_posted_moves
+            )
+            # Add partner initial balance to each move line
+            for gl_item in ll_statement:
+                acc_id = gl_item.get("id")
+                if "move_lines" in gl_item:
+                    for ml in gl_item["move_lines"]:
+                        partner_id = ml.get("partner_id")
+                        key = (acc_id, partner_id) if partner_id else (acc_id, 0)
+                        if key in partner_initial_balances:
+                            ml["partner_init_bal"] = partner_initial_balances[key]["balance"]
+                        else:
+                            ml["partner_init_bal"] = 0.0
         # Set the bal_curr of the initial balance to 0 if it does not correspond
         # (reducing the corresponding of the bal_curr of the initial balance).
         for gl_item in ll_statement:
@@ -904,6 +975,7 @@ class LLStatementReport(models.AbstractModel):
             "hide_account_at_0": data["hide_account_at_0"],
             "show_cost_center": data["show_cost_center"],
             "ll_statement": ll_statement,
+            "grouped_by": grouped_by,
             "accounts_data": accounts_data,
             "journals_data": journals_data,
             "full_reconcile_data": full_reconcile_data,
