@@ -227,7 +227,7 @@ class LLStatementReport(models.AbstractModel):
         return data
 
     def _get_partner_initial_balances(
-        self, account_ids, company_id, date_from, foreign_currency, only_posted_moves
+        self, account_ids, company_id, date_from, foreign_currency, only_posted_moves, cost_center_ids=None, partner_ids=None
     ):
         """Get initial balances per partner for receivable/payable accounts."""
         # Get receivable/payable accounts
@@ -252,6 +252,12 @@ class LLStatementReport(models.AbstractModel):
             base_domain += [("move_id.state", "=", "posted")]
         else:
             base_domain += [("move_id.state", "in", ["posted", "draft"])]
+        # Add analytic account filter if provided
+        if cost_center_ids:
+            base_domain += [("analytic_account_ids", "in", cost_center_ids)]
+        # Add partner filter if provided
+        if partner_ids:
+            base_domain += [("partner_id", "in", partner_ids)]
 
         partner_initials = self.env["account.move.line"].read_group(
             domain=base_domain,
@@ -893,7 +899,8 @@ class LLStatementReport(models.AbstractModel):
         partner_initial_balances = {}
         if grouped_by == "none":
             partner_initial_balances = self._get_partner_initial_balances(
-                account_ids, company_id, date_from, foreign_currency, only_posted_moves
+                account_ids, company_id, date_from, foreign_currency, only_posted_moves,
+                cost_center_ids=cost_center_ids, partner_ids=partner_ids
             )
             # Add partner initial balance to each move line
             for gl_item in ll_statement:
