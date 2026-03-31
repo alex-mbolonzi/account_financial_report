@@ -705,6 +705,7 @@ class LLStatementReport(models.AbstractModel):
             account = {}
             account.update(
                 {
+                    "id": acc_id,
                     "code": accounts_data[acc_id]["code"],
                     "name": accounts_data[acc_id]["name"],
                     "type": "account",
