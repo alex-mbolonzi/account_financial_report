@@ -226,6 +226,12 @@ class LLStatementReport(models.AbstractModel):
                 data[acc_id][grouped_by] = True
         return data
 
+    def _prepare_gen_ld_data_group_none(self, data, domain, grouped_by):
+        """Calculate partner initial balances for receivable/payable accounts when grouped_by is 'none'.
+        Delegates to _prepare_gen_ld_data_group_partners for partner-level initial balance calculation.
+        """
+        return self._prepare_gen_ld_data_group_partners(data, domain, grouped_by)
+
     def _get_partner_initial_balances(
         self, account_ids, company_id, date_from, foreign_currency, only_posted_moves, cost_center_ids=None, partner_ids=None
     ):
@@ -499,7 +505,15 @@ class LLStatementReport(models.AbstractModel):
             else:
                 res.append({"id": 0, "name": "Missing Tax"})
         else:
-            res.append({"id": 0, "name": ""})
+            # For 'none' grouping, use partner ID for receivable/payable accounts
+            # This ensures partner initial balances are correctly attached
+            item_id = move_line["partner_id"][0] if move_line["partner_id"] else 0
+            item_name = (
+                move_line["partner_id"][1]
+                if move_line["partner_id"]
+                else _("Missing Partner")
+            )
+            res.append({"id": item_id, "name": item_name})
         return res
 
     def _get_period_ml_data(
@@ -764,7 +778,8 @@ class LLStatementReport(models.AbstractModel):
                         gen_led_data[acc_id]["init_bal"]["balance"],
                         precision_rounding=rounding,
                     )
-                    and account["list_grouped"] == []
+                    and (grouped_by == "none" and account.get("move_lines") == [] or 
+                         grouped_by != "none" and account.get("list_grouped") == [])
                 ):
                     continue
             ll_statement += [account]
