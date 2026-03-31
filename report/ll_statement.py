@@ -897,14 +897,22 @@ class LLStatementReport(models.AbstractModel):
             # Add partner initial balance to each move line
             for gl_item in ll_statement:
                 acc_id = gl_item.get("id")
+                move_lines = []
+                # Handle both direct move_lines and list_grouped structure
                 if "move_lines" in gl_item:
-                    for ml in gl_item["move_lines"]:
-                        partner_id = ml.get("partner_id")
-                        key = (acc_id, partner_id) if partner_id else (acc_id, 0)
-                        if key in partner_initial_balances:
-                            ml["partner_init_bal"] = partner_initial_balances[key]["balance"]
-                        else:
-                            ml["partner_init_bal"] = 0.0
+                    move_lines = gl_item["move_lines"]
+                elif "list_grouped" in gl_item:
+                    for group_item in gl_item["list_grouped"]:
+                        if "move_lines" in group_item:
+                            move_lines.extend(group_item["move_lines"])
+                
+                for ml in move_lines:
+                    partner_id = ml.get("partner_id")
+                    key = (acc_id, partner_id) if partner_id else (acc_id, 0)
+                    if key in partner_initial_balances:
+                        ml["partner_init_bal"] = partner_initial_balances[key]["balance"]
+                    else:
+                        ml["partner_init_bal"] = 0.0
         # Set the bal_curr of the initial balance to 0 if it does not correspond
         # (reducing the corresponding of the bal_curr of the initial balance).
         for gl_item in ll_statement:
