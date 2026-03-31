@@ -229,25 +229,15 @@ class LLStatementReport(models.AbstractModel):
     def _get_partner_initial_balances(
         self, account_ids, company_id, date_from, foreign_currency, only_posted_moves
     ):
-        """Get initial balances per partner for receivable/payable accounts."""
-        # Get receivable/payable accounts
-        acc_prt_accounts = self.env["account.account"].search(
-            [
-                ("company_ids", "in", [company_id]),
-                ("account_type", "in", ["asset_receivable", "liability_payable"]),
-            ]
-        )
-        if account_ids:
-            acc_prt_accounts = acc_prt_accounts.filtered(lambda a: a.id in account_ids)
-
-        if not acc_prt_accounts:
-            return {}
-
+        """Get initial balances per partner for all accounts with partners."""
+        # Get all accounts that have partners
         base_domain = [
             ("company_id", "=", company_id),
-            ("account_id", "in", acc_prt_accounts.ids),
             ("date", "<", date_from),
+            ("partner_id", "!=", False),
         ]
+        if account_ids:
+            base_domain.append(("account_id", "in", account_ids))
         if only_posted_moves:
             base_domain += [("move_id.state", "=", "posted")]
         else:
