@@ -770,7 +770,7 @@ class LLStatementReport(models.AbstractModel):
                         for ml in group_item.get("move_lines", []):
                             if partner_initial_balances is not None:
                                 p_id = ml.get("partner_id")
-                                p_id = p_id[0] if p_id else 0
+                                p_id = p_id if p_id else 0
                                 p_bal = partner_initial_balances.get((acc_id, p_id))
                                 if p_bal:
                                     partner_init_bal = p_bal.get("balance", 0.0)
