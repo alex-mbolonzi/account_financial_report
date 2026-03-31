@@ -147,8 +147,6 @@
                     <div class="act_as_cell" style="width: 4.13%;">Journal</div>
                     <!--## account code-->
                     <div class="act_as_cell" style="width: 4.75%;">Account</div>
-                    <!--## account code-->
-                    <div class="act_as_cell" style="width: 8.89%;">Taxes</div>
                     <!--## partner-->
                     <div class="act_as_cell" style="width: 12.01%;">Partner</div>
                     <!--## ref - label-->
@@ -166,8 +164,6 @@
                         <!--## analytic tags-->
                         <div class="act_as_cell" style="width: 4.75%;">Tags</div>
                     </t>
-                    <!--## matching_number-->
-                    <div class="act_as_cell" style="width: 2.41%;">Rec.</div>
                     <!--## debit-->
                     <div class="act_as_cell amount" style="width: 8.02%;">Debit</div>
                     <!--## credit-->
@@ -199,8 +195,6 @@
                 <div class="act_as_cell" />
                 <!--## account code-->
                 <div class="act_as_cell" />
-                <!--## taxes-->
-                <div class="act_as_cell" />
                 <!--## partner-->
                 <div class="act_as_cell" />
                 <!--## ref - label-->
@@ -219,8 +213,6 @@
                     <!--## analytic tags-->
                     <div class="act_as_cell" />
                 </t>
-                <!--## matching_number-->
-                <div class="act_as_cell" />
                 <t
                     t-set="misc_domain"
                     t-value="[('account_id', '=', account['id']),('date', '&lt;', date_from)]"
@@ -430,19 +422,6 @@
                             <t t-out="account['code']" />
                         </span>
                     </div>
-                    <!--## taxes-->
-                    <div class="act_as_cell left">
-                        <t t-if="taxes_data and line['tax_ids']">
-                            <t t-foreach="line['tax_ids']" t-as="tax_id">
-                                <span
-                                    t-out="o._get_atr_from_dict(tax_id, taxes_data, 'tax_name')"
-                                />
-                            </t>
-                        </t>
-                        <t t-if="line['tax_line_id']">
-                            <span t-out="line['tax_line_id'][1]" />
-                        </t>
-                    </div>
                     <!--## partner-->
                     <div class="act_as_cell left">
                         <t t-if="line['partner_id']">
@@ -517,18 +496,6 @@
                             </t>
                         </div>
                     </t>
-                    <!--## matching_number-->
-                    <div class="act_as_cell">
-                        <t t-if="line['rec_id']">
-                            <span
-                                t-att-res-id="line['rec_id']"
-                                res-model="account.full.reconcile"
-                                view-type="form"
-                            >
-                                <t t-out="line['rec_name']" />
-                            </span>
-                        </t>
-                    </div>
                     <!--## debit-->
                     <div class="act_as_cell amount">
                         <t t-if="line['id']">
@@ -672,8 +639,6 @@
                     <!--## analytic tags-->
                     <div class="act_as_cell" style="width: 4.75%;" />
                 </t>
-                <!--## matching_number-->
-                <div class="act_as_cell" style="width: 2.41%;" />
                 <!--## debit-->
                 <div class="act_as_cell amount" style="width: 8.02%;">
                     <span
