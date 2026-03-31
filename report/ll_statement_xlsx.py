@@ -28,7 +28,6 @@ class LLStatementXslx(models.AbstractModel):
             {"header": _("Entry"), "field": "entry", "width": 18},
             {"header": _("Journal"), "field": "journal", "width": 8},
             {"header": _("Account"), "field": "account", "width": 9},
-            {"header": _("Taxes"), "field": "taxes_description", "width": 15},
             {"header": _("Partner"), "field": "partner_name", "width": 25},
             {"header": _("Ref - Label"), "field": "ref_label", "width": 40},
         ]
@@ -41,7 +40,6 @@ class LLStatementXslx(models.AbstractModel):
                 },
             ]
         res += [
-            {"header": _("Rec."), "field": "rec_name", "width": 15},
             {
                 "header": _("Debit"),
                 "field": "debit",
@@ -189,12 +187,7 @@ class LLStatementXslx(models.AbstractModel):
                             }
                         )
                     if line["ref_label"] != "Centralized entries":
-                        taxes_description = ""
                         analytic_distribution = ""
-                        for tax_id in line["tax_ids"]:
-                            taxes_description += taxes_data[tax_id]["tax_name"] + " "
-                        if line["tax_line_id"]:
-                            taxes_description += line["tax_line_id"][1]
                         for account_ids, value in line["analytic_distribution"].items():
                             for account_id in account_ids.split(","):
                                 if value < 100:
@@ -208,7 +201,6 @@ class LLStatementXslx(models.AbstractModel):
                                     )
                         line.update(
                             {
-                                "taxes_description": taxes_description,
                                 "analytic_distribution": analytic_distribution,
                             }
                         )
@@ -298,12 +290,7 @@ class LLStatementXslx(models.AbstractModel):
                                 }
                             )
                         if line["ref_label"] != "Centralized entries":
-                            taxes_description = ""
                             analytic_distribution = ""
-                            for tax_id in line["tax_ids"]:
-                                taxes_description += (
-                                    taxes_data[tax_id]["tax_name"] + " "
-                                )
                             for account_ids, value in line[
                                 "analytic_distribution"
                             ].items():
@@ -319,7 +306,6 @@ class LLStatementXslx(models.AbstractModel):
                                         )
                             line.update(
                                 {
-                                    "taxes_description": taxes_description,
                                     "analytic_distribution": analytic_distribution,
                                 }
                             )
