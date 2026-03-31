@@ -34,6 +34,22 @@
         <field name="report_name">account_financial_report.general_ledger</field>
         <field name="report_file">account_financial_report.general_ledger</field>
     </record>
+    <!-- LL Statement -->
+    <record id="action_print_report_ll_statement_qweb" model="ir.actions.report">
+        <field name="name">LL Statement</field>
+        <field name="model">ll.statement.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">account_financial_report.ll_statement</field>
+        <field name="report_file">account_financial_report.ll_statement</field>
+        <field name="paperformat_id" ref="report_qweb_paperformat" />
+    </record>
+    <record id="action_print_report_ll_statement_html" model="ir.actions.report">
+        <field name="name">LL Statement</field>
+        <field name="model">ll.statement.report.wizard</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">account_financial_report.ll_statement</field>
+        <field name="report_file">account_financial_report.ll_statement</field>
+    </record>
     <!-- Journal Ledger -->
     <record id="action_print_journal_ledger_wizard_qweb" model="ir.actions.report">
         <field name="name">ournal Ledger</field>
@@ -129,6 +145,14 @@
         <field name="report_name">a_f_r.report_general_ledger_xlsx</field>
         <field name="report_type">xlsx</field>
         <field name="report_file">report_general_ledger</field>
+    </record>
+    <record id="action_report_ll_statement_xlsx" model="ir.actions.report">
+        <field name="name">LL Statement XLSX</field>
+        <field name="model">ll.statement.report.wizard</field>
+        <field name="type">ir.actions.report</field>
+        <field name="report_name">a_f_r.report_ll_statement_xlsx</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_file">report_ll_statement</field>
     </record>
     <record id="action_report_journal_ledger_xlsx" model="ir.actions.report">
         <field name="name">Journal Ledger XLSX</field>
