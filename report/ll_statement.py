@@ -220,6 +220,11 @@ class LLStatementReport(models.AbstractModel):
                     prt_id = gl["partner_id"][0]
                     prt_name = gl["partner_id"][1]
                 acc_id = gl["account_id"][0]
+                # Initialize account entry if it doesn't exist
+                if acc_id not in data:
+                    data[acc_id] = self._initialize_data(False)
+                    data[acc_id]["id"] = acc_id
+                    data[acc_id][grouped_by] = False
                 data[acc_id][prt_id] = self._prepare_gen_ld_data_item(gl)
                 data[acc_id][prt_id]["id"] = prt_id
                 data[acc_id][prt_id]["name"] = prt_name
