@@ -226,6 +226,51 @@ class LLStatementReport(models.AbstractModel):
                 data[acc_id][grouped_by] = True
         return data
 
+    def _prepare_gen_ld_data_group_none(self, data, domain, grouped_by):
+        """Calculate partner initial balances for receivable/payable accounts when grouped_by is 'none'.
+        This ensures partner initial balances are available even when not explicitly grouping by partners.
+        """
+        # Get receivable/payable accounts from the data
+        acc_prt_account_ids = self._get_acc_prt_accounts_ids(
+            self.env.context.get('company_id'), 'partners'
+        )
+        
+        # Filter to only receivable/payable accounts in the data
+        accounts_to_process = [acc_id for acc_id in data.keys() if acc_id in acc_prt_account_ids]
+        
+        if not accounts_to_process:
+            return data
+        
+        # Get partner-level initial balances for these accounts
+        gl_initial_acc_prt = self.env["account.move.line"].read_group(
+            domain=domain,
+            fields=[
+                "account_id",
+                "partner_id",
+                "debit",
+                "credit",
+                "balance",
+                "amount_currency:sum",
+            ],
+            groupby=["account_id", "partner_id"],
+            lazy=False,
+        )
+        if gl_initial_acc_prt:
+            for gl in gl_initial_acc_prt:
+                if not gl["partner_id"]:
+                    prt_id = 0
+                    prt_name = _("Missing Partner")
+                else:
+                    prt_id = gl["partner_id"][0]
+                    prt_name = gl["partner_id"][1]
+                acc_id = gl["account_id"][0]
+                if acc_id in data:
+                    data[acc_id][prt_id] = self._prepare_gen_ld_data_item(gl)
+                    data[acc_id][prt_id]["id"] = prt_id
+                    data[acc_id][prt_id]["name"] = prt_name
+                    data[acc_id][grouped_by] = True
+        return data
+
     def _get_partner_initial_balances(
         self, account_ids, company_id, date_from, foreign_currency, only_posted_moves, cost_center_ids=None, partner_ids=None
     ):
@@ -499,7 +544,15 @@ class LLStatementReport(models.AbstractModel):
             else:
                 res.append({"id": 0, "name": "Missing Tax"})
         else:
-            res.append({"id": 0, "name": ""})
+            # For 'none' grouping, use partner ID for receivable/payable accounts
+            # This ensures partner initial balances are correctly attached
+            item_id = move_line["partner_id"][0] if move_line["partner_id"] else 0
+            item_name = (
+                move_line["partner_id"][1]
+                if move_line["partner_id"]
+                else _("Missing Partner")
+            )
+            res.append({"id": item_id, "name": item_name})
         return res
 
     def _get_period_ml_data(
@@ -764,7 +817,8 @@ class LLStatementReport(models.AbstractModel):
                         gen_led_data[acc_id]["init_bal"]["balance"],
                         precision_rounding=rounding,
                     )
-                    and account["list_grouped"] == []
+                    and (grouped_by == "none" and account.get("move_lines") == [] or 
+                         grouped_by != "none" and account.get("list_grouped") == [])
                 ):
                     continue
             ll_statement += [account]
