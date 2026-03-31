@@ -464,12 +464,10 @@
                     <!--## partner init balance -->
                     <t t-if="grouped_by == 'none'">
                         <div class="act_as_cell amount">
-                            <t t-if="line.get('partner_init_bal')">
-                                <span
-                                    t-out="line['partner_init_bal']"
-                                    t-options="{'widget': 'monetary', 'display_currency': company_currency}"
-                                />
-                            </t>
+                            <span
+                                t-out="line.get('partner_init_bal', 0.0)"
+                                t-options="{'widget': 'monetary', 'display_currency': company_currency}"
+                            />
                         </div>
                     </t>
                     <!--## cost_center-->
