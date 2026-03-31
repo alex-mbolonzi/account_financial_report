@@ -741,7 +741,23 @@ class LLStatementReport(models.AbstractModel):
                     hide_account_at_0,
                     rounding,
                 )
-                account.update({"list_grouped": list_grouped})
+                # When grouped_by is 'none', flatten the list_grouped into move_lines
+                # and add partner initial balance to each move line
+                if grouped_by == "none" and list_grouped:
+                    all_move_lines = []
+                    for group_item in list_grouped:
+                        partner_init_bal = group_item.get("init_bal", {}).get("balance", 0.0)
+                        for ml in group_item.get("move_lines", []):
+                            ml["partner_init_bal"] = partner_init_bal
+                            all_move_lines.append(ml)
+                    # Sort by date
+                    all_move_lines = sorted(all_move_lines, key=lambda k: k.get("date", ""))
+                    account["move_lines"] = all_move_lines
+                    # Copy account-level balances
+                    account["init_bal"] = gen_led_data[acc_id].get("init_bal", {})
+                    account["fin_bal"] = gen_led_data[acc_id].get("fin_bal", {})
+                else:
+                    account.update({"list_grouped": list_grouped})
                 if (
                     hide_account_at_0
                     and float_is_zero(
@@ -894,33 +910,6 @@ class LLStatementReport(models.AbstractModel):
                         account[grouped_by] = False
                         del account["list_grouped"]
         ll_statement = sorted(ll_statement, key=lambda k: k["code"])
-        
-        # Get partner initial balances for receivable accounts when grouped by "none"
-        partner_initial_balances = {}
-        if grouped_by == "none":
-            partner_initial_balances = self._get_partner_initial_balances(
-                account_ids, company_id, date_from, foreign_currency, only_posted_moves,
-                cost_center_ids=cost_center_ids, partner_ids=partner_ids
-            )
-            # Add partner initial balance to each move line
-            for gl_item in ll_statement:
-                acc_id = gl_item.get("id")
-                move_lines = []
-                # Handle both direct move_lines and list_grouped structure
-                if "move_lines" in gl_item:
-                    move_lines = gl_item["move_lines"]
-                elif "list_grouped" in gl_item:
-                    for group_item in gl_item["list_grouped"]:
-                        if "move_lines" in group_item:
-                            move_lines.extend(group_item["move_lines"])
-                
-                for ml in move_lines:
-                    partner_id = ml.get("partner_id")
-                    key = (acc_id, partner_id) if partner_id else (acc_id, 0)
-                    if key in partner_initial_balances:
-                        ml["partner_init_bal"] = partner_initial_balances[key]["balance"]
-                    else:
-                        ml["partner_init_bal"] = 0.0
         # Set the bal_curr of the initial balance to 0 if it does not correspond
         # (reducing the corresponding of the bal_curr of the initial balance).
         for gl_item in ll_statement:
