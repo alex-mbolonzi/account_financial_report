@@ -30,7 +30,7 @@
             </div>
             <!-- Display filters -->
             <t t-call="account_financial_report.report_ll_statement_filters" />
-            <t t-foreach="general_ledger" t-as="account">
+            <t t-foreach="ll_statement" t-as="account">
                 <div class="page_break">
                     <!-- Display account header -->
                     <div class="act_as_table list_table" style="margin-top: 10px;" />
