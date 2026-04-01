@@ -803,7 +803,7 @@ class LLStatementReport(models.AbstractModel):
                             "date": False,
                             "entry_id": first_ml.get("entry_id", False),
                             "entry": first_ml.get("entry", False),
-                            "ref_label": "Monthly Rent",
+                            "ref_label": "Tenant Invoice",
                             "analytic_distribution": {},
                             "tag_ids": [],
                             "tax_ids": [],
