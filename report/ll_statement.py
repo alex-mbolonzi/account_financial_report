@@ -772,10 +772,8 @@ class LLStatementReport(models.AbstractModel):
                         
                         # Get partner initial balance
                         partner_init_bal = group_item.get("init_bal", {}).get("balance", 0.0)
-                        if partner_initial_balances is not None:
-                            p_bal = partner_initial_balances.get((acc_id, partner_id))
-                            if p_bal:
-                                partner_init_bal = p_bal.get("balance", 0.0)
+                        # Use the filtered initial balance from group_item
+                        # (partner_initial_balances is unfiltered and would cause incorrect totals)
                         
                         # Sum up debit and credit from all move lines for this partner
                         total_debit = 0.0
