@@ -180,47 +180,57 @@ class LLStatementXslx(models.AbstractModel):
 
                 # Display account move lines
                 for line in account["move_lines"]:
-                    line.update(
-                        {
-                            "account": account["code"],
-                            "journal": journals_data[line["journal_id"]]["code"],
-                        }
-                    )
-                    line_currency_id = (
-                        line["currency_id"][0] if line["currency_id"] else False
-                    )
-                    if line_currency_id and line_currency_id != company_currency.id:
+                    # Handle partner summary rows differently
+                    if line.get("is_partner_summary"):
                         line.update(
                             {
-                                "currency_name": line["currency_id"][1],
-                                "currency_id": line["currency_id"][0],
+                                "account": account["code"],
+                                "journal": "",
+                                "partner_init_bal": line.get("partner_init_bal", 0.0),
                             }
                         )
-                    if line["ref_label"] != "Centralized entries":
-                        analytic_distribution = ""
-                        for account_ids, value in line["analytic_distribution"].items():
-                            for account_id in account_ids.split(","):
-                                if value < 100:
-                                    analytic_distribution += "%s %d%% " % (
-                                        analytic_data[int(account_id)]["name"],
-                                        value,
-                                    )
-                                else:
-                                    analytic_distribution += (
-                                        f"{analytic_data[int(account_id)]['name']} "
-                                    )
+                    else:
                         line.update(
                             {
-                                "analytic_distribution": analytic_distribution,
+                                "account": account["code"],
+                                "journal": journals_data[line["journal_id"]]["code"],
                             }
                         )
-                    if (
-                        foreign_currency
-                        and line_currency_id
-                        and line_currency_id != company_currency.id
-                    ):
-                        total_bal_curr += line["bal_curr"]
-                        line.update({"total_bal_curr": total_bal_curr})
+                        line_currency_id = (
+                            line["currency_id"][0] if line["currency_id"] else False
+                        )
+                        if line_currency_id and line_currency_id != company_currency.id:
+                            line.update(
+                                {
+                                    "currency_name": line["currency_id"][1],
+                                    "currency_id": line["currency_id"][0],
+                                }
+                            )
+                        if line["ref_label"] != "Centralized entries":
+                            analytic_distribution = ""
+                            for account_ids, value in line["analytic_distribution"].items():
+                                for account_id in account_ids.split(","):
+                                    if value < 100:
+                                        analytic_distribution += "%s %d%% " % (
+                                            analytic_data[int(account_id)]["name"],
+                                            value,
+                                        )
+                                    else:
+                                        analytic_distribution += (
+                                            f"{analytic_data[int(account_id)]['name']} "
+                                        )
+                            line.update(
+                                {
+                                    "analytic_distribution": analytic_distribution,
+                                }
+                            )
+                        if (
+                            foreign_currency
+                            and line_currency_id
+                            and line_currency_id != company_currency.id
+                        ):
+                            total_bal_curr += line["bal_curr"]
+                            line.update({"total_bal_curr": total_bal_curr})
                     self.write_line_from_dict(line, report_data)
                 # Display ending balance line for account
                 account.update(

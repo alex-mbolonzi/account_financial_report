@@ -761,24 +761,47 @@ class LLStatementReport(models.AbstractModel):
                     hide_account_at_0,
                     rounding,
                 )
-                # When grouped_by is 'none', flatten the list_grouped into move_lines
-                # and add partner initial balance to each move line
+                # When grouped_by is 'none', create partner summary rows
+                # with summed debit/credit instead of individual move lines
                 if grouped_by == "none" and list_grouped:
-                    all_move_lines = []
+                    partner_summaries = []
                     for group_item in list_grouped:
+                        # Get partner info from the group
+                        partner_id = group_item.get("id", 0)
+                        partner_name = group_item.get("name", _("Missing Partner"))
+                        
+                        # Get partner initial balance
                         partner_init_bal = group_item.get("init_bal", {}).get("balance", 0.0)
+                        if partner_initial_balances is not None:
+                            p_bal = partner_initial_balances.get((acc_id, partner_id))
+                            if p_bal:
+                                partner_init_bal = p_bal.get("balance", 0.0)
+                        
+                        # Sum up debit and credit from all move lines for this partner
+                        total_debit = 0.0
+                        total_credit = 0.0
                         for ml in group_item.get("move_lines", []):
-                            if partner_initial_balances is not None:
-                                p_id = ml.get("partner_id")
-                                p_id = p_id if p_id else 0
-                                p_bal = partner_initial_balances.get((acc_id, p_id))
-                                if p_bal:
-                                    partner_init_bal = p_bal.get("balance", 0.0)
-                            ml["partner_init_bal"] = partner_init_bal
-                            all_move_lines.append(ml)
-                    # Sort by date
-                    all_move_lines = sorted(all_move_lines, key=lambda k: k.get("date", ""))
-                    account["move_lines"] = all_move_lines
+                            total_debit += ml.get("debit", 0.0)
+                            total_credit += ml.get("credit", 0.0)
+                        
+                        # Calculate ending balance
+                        ending_balance = partner_init_bal + total_debit - total_credit
+                        
+                        # Create a summary row for this partner
+                        summary_row = {
+                            "partner_id": partner_id,
+                            "partner_name": partner_name,
+                            "partner_init_bal": partner_init_bal,
+                            "debit": total_debit,
+                            "credit": total_credit,
+                            "balance": ending_balance,
+                            "is_partner_summary": True,
+                        }
+                        partner_summaries.append(summary_row)
+                    
+                    # Sort by partner name
+                    partner_summaries = sorted(partner_summaries, key=lambda k: k.get("partner_name", ""))
+                    account["move_lines"] = partner_summaries
                     # Copy account-level balances
                     account["init_bal"] = gen_led_data[acc_id].get("init_bal", {})
                     account["fin_bal"] = gen_led_data[acc_id].get("fin_bal", {})
