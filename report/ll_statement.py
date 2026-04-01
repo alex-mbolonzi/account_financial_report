@@ -723,7 +723,6 @@ class LLStatementReport(models.AbstractModel):
         grouped_by,
         rec_after_date_to_ids,
         hide_account_at_0,
-        partner_initial_balances=None,
     ):
         ll_statement = []
         rounding = self.env.company.currency_id.rounding
@@ -761,24 +760,57 @@ class LLStatementReport(models.AbstractModel):
                     hide_account_at_0,
                     rounding,
                 )
-                # When grouped_by is 'none', flatten the list_grouped into move_lines
-                # and add partner initial balance to each move line
+                # When grouped_by is 'none', create partner summary rows
+                # with summed debit/credit instead of individual move lines
                 if grouped_by == "none" and list_grouped:
-                    all_move_lines = []
+                    partner_summaries = []
                     for group_item in list_grouped:
+                        # Get partner info from the group
+                        partner_id = group_item.get("id", 0)
+                        partner_name = group_item.get("name", _("Missing Partner"))
+                        
+                        # Get partner initial balance (already filtered by cost_center)
                         partner_init_bal = group_item.get("init_bal", {}).get("balance", 0.0)
-                        for ml in group_item.get("move_lines", []):
-                            if partner_initial_balances is not None:
-                                p_id = ml.get("partner_id")
-                                p_id = p_id if p_id else 0
-                                p_bal = partner_initial_balances.get((acc_id, p_id))
-                                if p_bal:
-                                    partner_init_bal = p_bal.get("balance", 0.0)
-                            ml["partner_init_bal"] = partner_init_bal
-                            all_move_lines.append(ml)
-                    # Sort by date
-                    all_move_lines = sorted(all_move_lines, key=lambda k: k.get("date", ""))
-                    account["move_lines"] = all_move_lines
+                        
+                        # Use pre-calculated totals from fin_bal (avoids redundant loop)
+                        total_debit = group_item.get("fin_bal", {}).get("debit", 0.0)
+                        total_credit = group_item.get("fin_bal", {}).get("credit", 0.0)
+                        total_bal_curr = group_item.get("fin_bal", {}).get("bal_curr", 0.0)
+                        
+                        # Calculate ending balance
+                        ending_balance = partner_init_bal + total_debit - total_credit
+                        
+                        # Create a summary row for this partner with all required fields
+                        # to prevent KeyError in downstream processing
+                        summary_row = {
+                            "id": False,
+                            "partner_id": partner_id,
+                            "partner_name": partner_name,
+                            "partner_init_bal": partner_init_bal,
+                            "debit": total_debit,
+                            "credit": total_credit,
+                            "balance": ending_balance,
+                            "bal_curr": total_bal_curr,
+                            "currency_id": False,
+                            "journal_id": False,
+                            "date": False,
+                            "entry_id": False,
+                            "entry": False,
+                            "ref_label": "",
+                            "analytic_distribution": {},
+                            "tag_ids": [],
+                            "tax_ids": [],
+                            "tax_line_id": False,
+                            "full_reconcile_id": False,
+                            "rec_id": 0,
+                            "rec_name": False,
+                            "is_partner_summary": True,
+                        }
+                        partner_summaries.append(summary_row)
+                    
+                    # Sort by partner name
+                    partner_summaries = sorted(partner_summaries, key=lambda k: k.get("partner_name", ""))
+                    account["move_lines"] = partner_summaries
                     # Copy account-level balances
                     account["init_bal"] = gen_led_data[acc_id].get("init_bal", {})
                     account["fin_bal"] = gen_led_data[acc_id].get("fin_bal", {})
@@ -879,18 +911,6 @@ class LLStatementReport(models.AbstractModel):
         unaffected_earnings_account = data["unaffected_earnings_account"]
         fy_start_date = data["fy_start_date"]
         extra_domain = data["domain"]
-        partner_initial_balances = None
-        if grouped_by == "none":
-            partner_initial_balances = self._get_partner_initial_balances(
-                account_ids,
-                company_id,
-                date_from,
-                foreign_currency,
-                only_posted_moves,
-                cost_center_ids=None, # Explicitly ignore cost_center to get true partner balance
-                partner_ids=partner_ids,
-            )
-
         gen_ld_data = self._get_initial_balance_data(
             account_ids,
             partner_ids,
@@ -932,7 +952,6 @@ class LLStatementReport(models.AbstractModel):
             grouped_by,
             rec_after_date_to_ids,
             hide_account_at_0,
-            partner_initial_balances=partner_initial_balances,
         )
         if centralize:
             for account in ll_statement:
