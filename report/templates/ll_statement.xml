@@ -773,21 +773,21 @@
                 <!--## debit-->
                 <div class="act_as_cell amount" style="width: 8.02%;">
                     <span
-                        t-out="account_or_group_item_object['fin_bal']['debit']"
+                        t-out="account_or_group_item_object['fin_bal'].get('debit', 0.0) - account_or_group_item_object.get('init_bal', {}).get('debit', 0.0)"
                         t-options="{'widget': 'monetary', 'display_currency': company_currency}"
                     />
                 </div>
                 <!--## credit-->
                 <div class="act_as_cell amount" style="width: 8.02%;">
                     <span
-                        t-out="account_or_group_item_object['fin_bal']['credit']"
+                        t-out="account_or_group_item_object['fin_bal'].get('credit', 0.0) - account_or_group_item_object.get('init_bal', {}).get('credit', 0.0)"
                         t-options="{'widget': 'monetary', 'display_currency': company_currency}"
                     />
                 </div>
                 <!--## balance cumulated-->
                 <div class="act_as_cell amount" style="width: 8.02%;">
                     <span
-                        t-out="account_or_group_item_object['fin_bal']['balance']"
+                        t-out="account_or_group_item_object['fin_bal'].get('balance', 0.0) - account_or_group_item_object.get('init_bal', {}).get('balance', 0.0)"
                         t-options="{'widget': 'monetary', 'display_currency': company_currency}"
                     />
                 </div>
@@ -818,7 +818,7 @@
                                         style="color: black;"
                                     >
                                         <t
-                                            t-out="account_or_group_item_object['fin_bal']['bal_curr']"
+                                            t-out="account_or_group_item_object['fin_bal'].get('bal_curr', 0.0) - account_or_group_item_object.get('init_bal', {}).get('bal_curr', 0.0)"
                                             t-options="{'widget': 'monetary', 'display_currency': account_currency}"
                                         />
                                     </a>
@@ -833,7 +833,7 @@
                                         style="color: black;"
                                     >
                                         <t
-                                            t-out="account_or_group_item_object['fin_bal']['bal_curr']"
+                                            t-out="account_or_group_item_object['fin_bal'].get('bal_curr', 0.0) - account_or_group_item_object.get('init_bal', {}).get('bal_curr', 0.0)"
                                             t-options="{'widget': 'monetary', 'display_currency': account_currency}"
                                         />
                                     </a>
@@ -850,7 +850,7 @@
                                         style="color: black;"
                                     >
                                         <t
-                                            t-out="account_or_group_item_object['fin_bal']['bal_curr']"
+                                            t-out="account_or_group_item_object['fin_bal'].get('bal_curr', 0.0) - account_or_group_item_object.get('init_bal', {}).get('bal_curr', 0.0)"
                                             t-options="{'widget': 'monetary', 'display_currency': account_currency}"
                                         />
                                     </a>
@@ -865,7 +865,7 @@
                                         style="color: black;"
                                     >
                                         <t
-                                            t-out="account_or_group_item_object['fin_bal']['bal_curr']"
+                                            t-out="account_or_group_item_object['fin_bal'].get('bal_curr', 0.0) - account_or_group_item_object.get('init_bal', {}).get('bal_curr', 0.0)"
                                             t-options="{'widget': 'monetary', 'display_currency': account_currency}"
                                         />
                                     </a>
