@@ -64,6 +64,8 @@ class LLStatementXslx(models.AbstractModel):
                 {
                     "header": _("Total Debt"),
                     "field": "total_debt",
+                    "field_initial_balance": "initial_total_debt",
+                    "field_final_balance": "final_total_debt",
                     "type": "amount",
                     "width": 14,
                 },
@@ -181,6 +183,7 @@ class LLStatementXslx(models.AbstractModel):
                         "initial_debit": account["init_bal"]["debit"],
                         "initial_credit": account["init_bal"]["credit"],
                         "initial_balance": account["init_bal"]["balance"],
+                        "initial_total_debt": account["init_bal"]["balance"],
                     }
                 )
                 if foreign_currency and account["currency_id"]:
@@ -249,6 +252,7 @@ class LLStatementXslx(models.AbstractModel):
                         "final_debit": account["fin_bal"]["debit"],
                         "final_credit": account["fin_bal"]["credit"],
                         "final_balance": account["fin_bal"]["balance"],
+                        "final_total_debt": account["init_bal"]["balance"] + (account["fin_bal"]["debit"] - account["init_bal"]["debit"]),
                     }
                 )
                 if foreign_currency and account["currency_id"]:
@@ -284,6 +288,7 @@ class LLStatementXslx(models.AbstractModel):
                             "initial_debit": group_item["init_bal"]["debit"],
                             "initial_credit": group_item["init_bal"]["credit"],
                             "initial_balance": group_item["init_bal"]["balance"],
+                            "initial_total_debt": group_item["init_bal"]["balance"],
                             "type": "partner",
                             "grouped_by": account["grouped_by"]
                             if "grouped_by" in account
@@ -355,6 +360,7 @@ class LLStatementXslx(models.AbstractModel):
                             "final_debit": group_item["fin_bal"]["debit"],
                             "final_credit": group_item["fin_bal"]["credit"],
                             "final_balance": group_item["fin_bal"]["balance"],
+                            "final_total_debt": group_item["init_bal"]["balance"] + (group_item["fin_bal"]["debit"] - group_item["init_bal"]["debit"]),
                         }
                     )
                     if foreign_currency and group_item["currency_id"]:
@@ -374,6 +380,7 @@ class LLStatementXslx(models.AbstractModel):
                             "final_debit": account["fin_bal"]["debit"],
                             "final_credit": account["fin_bal"]["credit"],
                             "final_balance": account["fin_bal"]["balance"],
+                            "final_total_debt": account["init_bal"]["balance"] + (account["fin_bal"]["debit"] - account["init_bal"]["debit"]),
                         }
                     )
                     if foreign_currency and account["fin_bal_currency_id"]:
