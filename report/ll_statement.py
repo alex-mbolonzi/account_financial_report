@@ -772,24 +772,38 @@ class LLStatementReport(models.AbstractModel):
                         # Get partner initial balance (already filtered by cost_center)
                         partner_init_bal = group_item.get("init_bal", {}).get("balance", 0.0)
                         
-                        # Sum up debit and credit from all move lines for this partner
-                        total_debit = 0.0
-                        total_credit = 0.0
-                        for ml in group_item.get("move_lines", []):
-                            total_debit += ml.get("debit", 0.0)
-                            total_credit += ml.get("credit", 0.0)
+                        # Use pre-calculated totals from fin_bal (avoids redundant loop)
+                        total_debit = group_item.get("fin_bal", {}).get("debit", 0.0)
+                        total_credit = group_item.get("fin_bal", {}).get("credit", 0.0)
+                        total_bal_curr = group_item.get("fin_bal", {}).get("bal_curr", 0.0)
                         
                         # Calculate ending balance
                         ending_balance = partner_init_bal + total_debit - total_credit
                         
-                        # Create a summary row for this partner
+                        # Create a summary row for this partner with all required fields
+                        # to prevent KeyError in downstream processing
                         summary_row = {
+                            "id": False,
                             "partner_id": partner_id,
                             "partner_name": partner_name,
                             "partner_init_bal": partner_init_bal,
                             "debit": total_debit,
                             "credit": total_credit,
                             "balance": ending_balance,
+                            "bal_curr": total_bal_curr,
+                            "currency_id": False,
+                            "journal_id": False,
+                            "date": False,
+                            "entry_id": False,
+                            "entry": False,
+                            "ref_label": "",
+                            "analytic_distribution": {},
+                            "tag_ids": [],
+                            "tax_ids": [],
+                            "tax_line_id": False,
+                            "full_reconcile_id": False,
+                            "rec_id": 0,
+                            "rec_name": False,
                             "is_partner_summary": True,
                         }
                         partner_summaries.append(summary_row)
