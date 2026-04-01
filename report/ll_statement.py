@@ -723,7 +723,6 @@ class LLStatementReport(models.AbstractModel):
         grouped_by,
         rec_after_date_to_ids,
         hide_account_at_0,
-        partner_initial_balances=None,
     ):
         ll_statement = []
         rounding = self.env.company.currency_id.rounding
@@ -770,10 +769,8 @@ class LLStatementReport(models.AbstractModel):
                         partner_id = group_item.get("id", 0)
                         partner_name = group_item.get("name", _("Missing Partner"))
                         
-                        # Get partner initial balance
+                        # Get partner initial balance (already filtered by cost_center)
                         partner_init_bal = group_item.get("init_bal", {}).get("balance", 0.0)
-                        # Use the filtered initial balance from group_item
-                        # (partner_initial_balances is unfiltered and would cause incorrect totals)
                         
                         # Sum up debit and credit from all move lines for this partner
                         total_debit = 0.0
@@ -900,18 +897,6 @@ class LLStatementReport(models.AbstractModel):
         unaffected_earnings_account = data["unaffected_earnings_account"]
         fy_start_date = data["fy_start_date"]
         extra_domain = data["domain"]
-        partner_initial_balances = None
-        if grouped_by == "none":
-            partner_initial_balances = self._get_partner_initial_balances(
-                account_ids,
-                company_id,
-                date_from,
-                foreign_currency,
-                only_posted_moves,
-                cost_center_ids=None, # Explicitly ignore cost_center to get true partner balance
-                partner_ids=partner_ids,
-            )
-
         gen_ld_data = self._get_initial_balance_data(
             account_ids,
             partner_ids,
@@ -953,7 +938,6 @@ class LLStatementReport(models.AbstractModel):
             grouped_by,
             rec_after_date_to_ids,
             hide_account_at_0,
-            partner_initial_balances=partner_initial_balances,
         )
         if centralize:
             for account in ll_statement:
