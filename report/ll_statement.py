@@ -786,6 +786,9 @@ class LLStatementReport(models.AbstractModel):
                         
                         # Create a summary row for this partner with all required fields
                         # to prevent KeyError in downstream processing
+                        move_lines = group_item.get("move_lines", [])
+                        first_ml = move_lines[0] if move_lines else {}
+                        
                         summary_row = {
                             "id": False,
                             "partner_id": partner_id,
@@ -796,11 +799,11 @@ class LLStatementReport(models.AbstractModel):
                             "balance": ending_balance,
                             "bal_curr": total_bal_curr,
                             "currency_id": False,
-                            "journal_id": False,
+                            "journal_id": first_ml.get("journal_id", False),
                             "date": False,
-                            "entry_id": False,
-                            "entry": False,
-                            "ref_label": "",
+                            "entry_id": first_ml.get("entry_id", False),
+                            "entry": first_ml.get("entry", False),
+                            "ref_label": "Monthly Rent",
                             "analytic_distribution": {},
                             "tag_ids": [],
                             "tax_ids": [],
