@@ -172,6 +172,10 @@
                     </t>
                     <!--## debit-->
                     <div class="act_as_cell amount" style="width: 8.02%;">Debit</div>
+                    <!--## total debt-->
+                    <t t-if="grouped_by == 'none'">
+                        <div class="act_as_cell amount" style="width: 8.02%;">Total Debt</div>
+                    </t>
                     <!--## credit-->
                     <div class="act_as_cell amount" style="width: 8.02%;">Credit</div>
                     <!--## balance cumulated-->
@@ -459,6 +463,15 @@
                                 t-options="{'widget': 'monetary', 'display_currency': company_currency}"
                             />
                         </div>
+                        <!--## total debt -->
+                        <t t-if="grouped_by == 'none'">
+                            <div class="act_as_cell amount">
+                                <span
+                                    t-out="line.get('partner_init_bal', 0.0) + line.get('debit', 0.0)"
+                                    t-options="{'widget': 'monetary', 'display_currency': company_currency}"
+                                />
+                            </div>
+                        </t>
                         <!--## credit -->
                         <div class="act_as_cell amount">
                             <span
@@ -777,6 +790,10 @@
                         t-options="{'widget': 'monetary', 'display_currency': company_currency}"
                     />
                 </div>
+                <!--## total debt empty cell-->
+                <t t-if="grouped_by == 'none'">
+                    <div class="act_as_cell amount" style="width: 8.02%;" />
+                </t>
                 <!--## credit-->
                 <div class="act_as_cell amount" style="width: 8.02%;">
                     <span
