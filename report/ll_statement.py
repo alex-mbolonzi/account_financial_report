@@ -769,16 +769,20 @@ class LLStatementReport(models.AbstractModel):
                         partner_id = group_item.get("id", 0)
                         partner_name = group_item.get("name", _("Missing Partner"))
                         
+                        fin_bal_dict = group_item.get("fin_bal", {})
+                        init_bal_dict = group_item.get("init_bal", {})
+
                         # Get partner initial balance (already filtered by cost_center)
-                        partner_init_bal = group_item.get("init_bal", {}).get("balance", 0.0)
+                        partner_init_bal = init_bal_dict.get("balance", 0.0)
                         
-                        # Use pre-calculated totals from fin_bal (avoids redundant loop)
-                        total_debit = group_item.get("fin_bal", {}).get("debit", 0.0)
-                        total_credit = group_item.get("fin_bal", {}).get("credit", 0.0)
-                        total_bal_curr = group_item.get("fin_bal", {}).get("bal_curr", 0.0)
+                        # Calculate period totals by subtracting init_bal from fin_bal
+                        # as fin_bal contains the cumulative totals (init_bal + period moves)
+                        total_debit = fin_bal_dict.get("debit", 0.0) - init_bal_dict.get("debit", 0.0)
+                        total_credit = fin_bal_dict.get("credit", 0.0) - init_bal_dict.get("credit", 0.0)
+                        total_bal_curr = fin_bal_dict.get("bal_curr", 0.0) - init_bal_dict.get("bal_curr", 0.0)
                         
-                        # Calculate ending balance
-                        ending_balance = partner_init_bal + total_debit - total_credit
+                        # Calculate ending balance directly from fin_bal cumulative totals
+                        ending_balance = fin_bal_dict.get("balance", 0.0)
                         
                         # Create a summary row for this partner with all required fields
                         # to prevent KeyError in downstream processing
