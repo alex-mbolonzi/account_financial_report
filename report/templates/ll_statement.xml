@@ -150,7 +150,7 @@
                     <!--## partner-->
                     <div class="act_as_cell" style="width: 12.01%;">Partner</div>
                     <!--## ref - label-->
-                    <div class="act_as_cell" style="width: 16.9%;">
+                    <div class="act_as_cell" t-attf-style="width: {{ '8.88%' if grouped_by == 'none' else '16.9%' }};">
                         Ref -
                         Label
                     </div>
@@ -172,6 +172,10 @@
                     </t>
                     <!--## debit-->
                     <div class="act_as_cell amount" style="width: 8.02%;">Debit</div>
+                    <!--## total debt-->
+                    <t t-if="grouped_by == 'none'">
+                        <div class="act_as_cell amount" style="width: 8.02%;">Total Debt</div>
+                    </t>
                     <!--## credit-->
                     <div class="act_as_cell amount" style="width: 8.02%;">Credit</div>
                     <!--## balance cumulated-->
@@ -459,6 +463,15 @@
                                 t-options="{'widget': 'monetary', 'display_currency': company_currency}"
                             />
                         </div>
+                        <!--## total debt -->
+                        <t t-if="grouped_by == 'none'">
+                            <div class="act_as_cell amount">
+                                <span
+                                    t-out="line.get('partner_init_bal', 0.0) + line.get('debit', 0.0)"
+                                    t-options="{'widget': 'monetary', 'display_currency': company_currency}"
+                                />
+                            </div>
+                        </t>
                         <!--## credit -->
                         <div class="act_as_cell amount">
                             <span
@@ -748,12 +761,12 @@
                         -
                         <span t-out="account['name']" />
                     </div>
-                    <div class="act_as_cell right" style="width: 16.9%;">Ending balance
+                    <div class="act_as_cell right" t-attf-style="width: {{ '8.88%' if grouped_by == 'none' else '16.9%' }};">Ending balance
                     </div>
                 </t>
                 <t t-if='type == "grouped_type"'>
                     <div class="act_as_cell first_column" style="width: 41.32%;" />
-                    <div class="act_as_cell right" style="width: 16.9%;">
+                    <div class="act_as_cell right" t-attf-style="width: {{ '8.88%' if grouped_by == 'none' else '16.9%' }};">
                         <t t-if="'partners' in account">Partner ending balance</t>
                         <t t-if="'taxes' in account">Tax ending balance</t>
                     </div>
@@ -777,6 +790,10 @@
                         t-options="{'widget': 'monetary', 'display_currency': company_currency}"
                     />
                 </div>
+                <!--## total debt empty cell-->
+                <t t-if="grouped_by == 'none'">
+                    <div class="act_as_cell amount" style="width: 8.02%;" />
+                </t>
                 <!--## credit-->
                 <div class="act_as_cell amount" style="width: 8.02%;">
                     <span

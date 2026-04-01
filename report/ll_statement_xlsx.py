@@ -58,6 +58,17 @@ class LLStatementXslx(models.AbstractModel):
                 "type": "amount",
                 "width": 14,
             },
+        ]
+        if report.grouped_by == 'none':
+            res += [
+                {
+                    "header": _("Total Debt"),
+                    "field": "total_debt",
+                    "type": "amount",
+                    "width": 14,
+                },
+            ]
+        res += [
             {
                 "header": _("Credit"),
                 "field": "credit",

@@ -795,6 +795,7 @@ class LLStatementReport(models.AbstractModel):
                             "partner_name": partner_name,
                             "partner_init_bal": partner_init_bal,
                             "debit": total_debit,
+                            "total_debt": partner_init_bal + total_debit,
                             "credit": total_credit,
                             "balance": ending_balance,
                             "bal_curr": total_bal_curr,
