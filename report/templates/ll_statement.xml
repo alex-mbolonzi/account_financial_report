@@ -192,8 +192,9 @@
                 </div>
             </div>
             <!-- Display first line with initial balance -->
-            <div class="act_as_row lines">
-                <!--## date-->
+            <t t-if="grouped_by != 'none'">
+                <div class="act_as_row lines">
+                    <!--## date-->
                 <div class="act_as_cell" />
                 <!--## move-->
                 <div class="act_as_cell" />
@@ -368,6 +369,7 @@
                     </t>
                 </t>
             </div>
+            </t>
             <!-- Display each lines -->
             <t t-set="total_bal_curr" t-value="0" />
             <t t-foreach="account_or_group_item_object['move_lines']" t-as="line">
@@ -376,13 +378,45 @@
                     <t t-if="line.get('is_partner_summary')">
                         <!-- Partner Summary Row -->
                         <!--## date - empty for summary -->
-                        <div class="act_as_cell left" />
+                        <div class="act_as_cell left">
+                            <span t-out="date_from" t-options="{'widget': 'date'}" />
+                        </div>
                         <!--## move - empty for summary -->
-                        <div class="act_as_cell left" />
+                        <div class="act_as_cell left">
+                            <t t-if="line.get('entry_id')">
+                                <span
+                                    t-att-res-id="line['entry_id']"
+                                    res-model="account.move"
+                                    view-type="form"
+                                >
+                                    <t t-out="line['entry']" />
+                                </span>
+                            </t>
+                        </div>
                         <!--## journal - empty for summary -->
-                        <div class="act_as_cell left" />
+                        <div class="act_as_cell left">
+                            <t t-if="line.get('journal_id')">
+                                <span
+                                    t-att-res-id="line['journal_id']"
+                                    res-model="account.journal"
+                                    view-type="form"
+                                >
+                                    <t
+                                        t-out="o._get_atr_from_dict(line['journal_id'], journals_data, 'code')"
+                                    />
+                                </span>
+                            </t>
+                        </div>
                         <!--## account code - empty for summary -->
-                        <div class="act_as_cell left" />
+                        <div class="act_as_cell left">
+                            <span
+                                t-att-res-id="account['id']"
+                                res-model="account.account"
+                                view-type="form"
+                            >
+                                <t t-out="account['code']" />
+                            </span>
+                        </div>
                         <!--## partner name -->
                         <div class="act_as_cell left">
                             <t t-if="line['partner_id']">
@@ -399,7 +433,9 @@
                             </t>
                         </div>
                         <!--## ref - label - empty for summary -->
-                        <div class="act_as_cell left" />
+                        <div class="act_as_cell left">
+                            <span t-out="line.get('ref_label', '')" />
+                        </div>
                         <!--## partner init balance -->
                         <t t-if="grouped_by == 'none'">
                             <div class="act_as_cell amount">
