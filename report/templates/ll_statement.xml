@@ -658,6 +658,10 @@
                             </span>
                         </t>
                     </div>
+                    <!--## total debt empty cell for alignment -->
+                    <t t-if="grouped_by == 'none'">
+                        <div class="act_as_cell amount" />
+                    </t>
                     <!--## credit-->
                     <div class="act_as_cell amount">
                         <t t-if="line['id']">
